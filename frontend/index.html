@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>YouTube Chat Boat</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>YouTube Chat Boat</h1>
+    <p>Paste a video with English captions, then ask it questions.</p>
+  </header>
+
+  <main>
+    <section class="setup">
+      <form id="load-form">
+        <label for="url">Video link</label>
+        <div class="row">
+          <input id="url" type="url" placeholder="https://www.youtube.com/watch?v=..." required>
+          <button id="load-btn">Load video</button>
+        </div>
+
+        <fieldset>
+          <legend>Model</legend>
+          <label class="choice"><input type="radio" name="provider" value="ollama" checked> Ollama <small>local, free, default</small></label>
+          <label class="choice"><input type="radio" name="provider" value="openai"> OpenAI <small>needs your API key</small></label>
+        </fieldset>
+
+        <div id="key-box" hidden>
+          <label for="key">OpenAI API key</label>
+          <input id="key" type="password" autocomplete="off" placeholder="sk-...">
+          <small id="key-note">Kept in this browser tab and sent only with your requests. The server never stores it.</small>
+        </div>
+      </form>
+      <p id="status" role="status"></p>
+      <div id="player" hidden></div>
+    </section>
+
+    <section class="chat" aria-label="Chat">
+      <ol id="log"><li class="hint">Load a video to start. Answers link to the moment in the video they came from.</li></ol>
+      <form id="ask-form">
+        <input id="question" placeholder="Ask about the video" autocomplete="off" disabled required>
+        <button id="ask-btn" disabled>Ask</button>
+      </form>
+    </section>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
