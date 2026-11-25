@@ -116,7 +116,7 @@ MAX_QUESTION_CHARS = int(os.getenv("MAX_QUESTION_CHARS", "2000"))
 # similar to the question are handed to the model.
 CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "1000"))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "200"))
-RETRIEVER_K = int(os.getenv("RETRIEVER_K", "4"))
+RETRIEVER_K = int(os.getenv("RETRIEVER_K", "6"))
 
 # ---------------------------------------------------------------------------
 # Application (pre-existing)

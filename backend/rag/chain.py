@@ -8,10 +8,15 @@ Changes in this version
 * NEW: returns a ``usage`` summary that the UI shows as a small meter.
 * CHANGED: timestamp links are only returned when the model actually found an
   answer (previously they were shown even for "I couldn't find this...").
+* CHANGED: no timestamps inside the answer text. They are not sent to the model
+  and any that still slip through are removed by ``strip_timestamps``. The
+  timestamps are returned separately in ``sources`` and the UI shows them once,
+  at the end of the message.
 """
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING
 
 from backend.config import CONTEXT_WINDOW_TOKENS, RESPONSE_RESERVE_TOKENS
@@ -19,7 +24,6 @@ from backend.rag.context import (
     PER_MESSAGE_OVERHEAD,
     build_retrieval_query,
     estimate_tokens,
-    format_timestamp,
     pack_excerpts,
     trim_history,
 )
@@ -37,6 +41,28 @@ EXCERPT_SHARE = 0.6
 def is_not_found(answer: str) -> bool:
     """True if the model replied with the standard "not in the transcript" text."""
     return NOT_FOUND_MESSAGE.lower().rstrip(".") in answer.lower()
+
+
+# One timestamp such as 3:42 or 1:02:05.
+_TS = r"(?:\d+:)?\d{1,2}:\d{2}"
+# [3:42]  [[3:42]]  [3:42](https://...)  [[3:42]](https://...)  [3:42, 6:30]  [3:42-4:10]
+_TS_BRACKET = re.compile(
+    r"\[{1,2}\s*" + _TS + r"(?:\s*(?:,|;|-|\u2013|to)\s*" + _TS + r")*\s*\]{1,2}(?:\([^)]*\))?"
+)
+
+
+def strip_timestamps(answer: str) -> str:
+    """Remove bracketed timestamps (and their links) from the answer text.
+
+    The prompt already tells the model not to write them; this is the safety
+    net for small models that do it anyway. Only the bracket formats above are
+    removed, so ordinary text such as "a 3:1 ratio" is left alone.
+    """
+    text = _TS_BRACKET.sub("", answer)
+    text = re.sub(r"[ \t]+([.,;:!?])", r"\1", text)      # "word ." -> "word."
+    text = re.sub(r"(?<=\S)[ \t]{2,}", " ", text)         # double spaces (keeps list indent)
+    text = re.sub(r"(?m)^\s*[-*\u2022]\s*$\n?", "", text)  # bullets left empty
+    return re.sub(r"[ \t]+$", "", text, flags=re.M).strip()
 
 
 class RAGChain:
@@ -86,14 +112,15 @@ class RAGChain:
         trimmed = trim_history(history, remaining - excerpt_tokens)
 
         # 4. Build the prompt and ask the model.
-        context = "\n\n".join(
-            f"[{format_timestamp(start)}] {text}" for start, text in kept_excerpts
-        )
+        # Timestamps are deliberately NOT put in the prompt (see prompts.py).
+        context = "\n\n".join(text for _, text in kept_excerpts)
         messages = build_messages(context, trimmed.messages, question)
         answer = llm.generate_response(messages)
 
-        # 5. Only link timestamps if the model found something.
+        # 5. Only link timestamps if the model found something. They are
+        #    returned here and shown at the end of the message, never inline.
         sources = [] if is_not_found(answer) else sorted({start for start, _ in kept_excerpts})
+        answer = strip_timestamps(answer)
 
         return {
             "answer": answer,
