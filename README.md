@@ -49,7 +49,6 @@ Youtube_Chat_Boat/
 ├── frontend/
 │   ├── index.html  style.css  script.js   the chat interface
 │   └── markdown.js                        safe rendering of **bold**, lists, code
-├── tests/test_context_window.py   unit tests for history/context logic
 ├── Dockerfile  docker-compose.yml  requirements.txt
 └── .env.example                   documented settings template
 ```
@@ -58,10 +57,13 @@ Youtube_Chat_Boat/
 
 ### Option A: Docker (easiest)
 
-Needs Docker with Compose. Ollama and the models are set up for you.
+Needs [Git](https://git-scm.com/downloads) and Docker with Compose. Ollama and the models are set up for you.
 
 ```bash
-cp .env.example .env
+git clone https://github.com/HritujaWalunj/Youtube_Chat_Boat.git
+cd Youtube_Chat_Boat
+
+cp env_example.env .env
 docker compose up --build
 ```
 
@@ -71,9 +73,12 @@ The first start downloads the models (`qwen3:8b` is about 5 GB), so wait for the
 
 ### Option B: run locally
 
-Needs Python 3.12 and [Ollama](https://ollama.com/download).
+Needs [Git](https://git-scm.com/downloads), Python 3.12 and [Ollama](https://ollama.com/download).
 
 ```bash
+git clone https://github.com/HritujaWalunj/Youtube_Chat_Boat.git
+cd Youtube_Chat_Boat
+
 ollama pull qwen3:8b
 ollama pull nomic-embed-text
 
@@ -129,7 +134,7 @@ Raise or lower it with `CONTEXT_WINDOW_TOKENS`.
 
 ## Configuration
 
-Set in `.env` (see `.env.example`). All are optional.
+Set in `.env` (see `env_example.env`). All are optional.
 
 | Variable | Default | Meaning |
 |---|---|---|
